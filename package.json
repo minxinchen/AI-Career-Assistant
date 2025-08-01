@@ -1,0 +1,52 @@
+{
+  "name": "ai-career-assistant",
+  "version": "1.0.0",
+  "description": "AI-powered resume analysis and job matching platform",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd backend && npm test",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "start": "npm run start:backend",
+    "start:backend": "cd backend && npm start",
+    "setup": "npm install && cd frontend && npm install && cd ../backend && npm install && cd ../ai-services && pip install -r requirements.txt",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "keywords": [
+    "ai",
+    "career",
+    "resume",
+    "job-matching",
+    "nlp",
+    "machine-learning",
+    "taiwan-jobs"
+  ],
+  "author": "AI Development Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/minxinchen/AI-Career-Assista.git"
+  },
+  "bugs": {
+    "url": "https://github.com/minxinchen/AI-Career-Assista/issues"
+  },
+  "homepage": "https://github.com/minxinchen/AI-Career-Assista#readme",
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}
