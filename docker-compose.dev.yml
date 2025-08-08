@@ -1,0 +1,178 @@
+# AI Career Assistant - Development Environment
+# Enhanced Docker Compose with security and monitoring
+version: '3.8'
+
+services:
+  # Redis with security configuration
+  redis:
+    image: redis:7-alpine
+    container_name: ai-career-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/etc/redis/redis.conf:ro
+    command: redis-server /etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - ai-career-network
+
+  # Backend API service with development features
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_ENV: development
+    container_name: ai-career-backend-dev
+    ports:
+      - "3001:3001"
+      - "9229:9229"  # Node.js debugging port
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - PORT=3001
+      - DEBUG=ai-career:*
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+      - ./temp:/app/temp
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - ai-career-network
+
+  # AI Services with GPU support (optional)
+  ai-services:
+    build:
+      context: ./ai-services
+      dockerfile: Dockerfile.dev
+      args:
+        PYTHON_ENV: development
+    container_name: ai-career-ai-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - REDIS_URL=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_VISION_API_KEY=${GOOGLE_VISION_API_KEY}
+    volumes:
+      - ./ai-services:/app
+      - ./models:/app/models
+      - ./temp:/app/temp
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s  # AI services take longer to start
+    restart: unless-stopped
+    # Uncomment for GPU support
+    # runtime: nvidia
+    # environment:
+    #   - NVIDIA_VISIBLE_DEVICES=all
+    networks:
+      - ai-career-network
+
+  # Frontend with hot reloading
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: ai-career-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_ENVIRONMENT=development
+      - CHOKIDAR_USEPOLLING=true  # For Windows/WSL
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+    networks:
+      - ai-career-network
+
+  # Monitoring and Development Tools
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: ai-career-redis-ui
+    hostname: redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - ai-career-network
+    profiles:
+      - monitoring
+
+  # File system watcher for development
+  watchtower:
+    image: containrrr/watchtower
+    container_name: ai-career-watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=30
+      - WATCHTOWER_CLEANUP=true
+    profiles:
+      - monitoring
+
+  # Local documentation server
+  docs:
+    image: nginx:alpine
+    container_name: ai-career-docs
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docs:/usr/share/nginx/html:ro
+      - ./nginx/docs.conf:/etc/nginx/nginx.conf:ro
+    profiles:
+      - docs
+
+volumes:
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/redis
+
+networks:
+  ai-career-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
