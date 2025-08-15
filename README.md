@@ -53,24 +53,30 @@ AI Career Assistant 是一個智能求職輔助平台，能夠自動分析用戶
 
 ```
 AI-Career-Assistant/
-├── docs/                    # 專案文檔
-│   ├── PRD.md              # 產品需求文檔
-│   ├── API-Design.md       # API設計文檔
-│   ├── Architecture.md     # 系統架構文檔
-│   └── Development-Log.md  # 開發歷程記錄
-├── frontend/               # 前端應用
+├── docs/                                      # 專案文檔
+│   ├── PRD.md                                # 產品需求文檔
+│   ├── API-Design.md                         # API設計文檔
+│   ├── Architecture.md                       # 系統架構文檔
+│   ├── Development-Log.md                    # 開發歷程記錄
+│   ├── Stage1-System-Assessment.md           # 階段一系統評估
+│   └── 📚 教學文檔系列/                       # SuperClaude教學體系
+│       ├── 教學文檔導航手冊.md                 # 🧭 學習路徑導航
+│       ├── 教學文檔-階段二架構重構.md          # 📘 技術深度學習
+│       ├── AI求職助手改善教學指南.md           # 📗 實戰改善指南  
+│       └── 外行友好的AI開發流程說明.md         # 📙 非技術人員友好
+├── frontend/                                 # 前端應用
 │   ├── src/
 │   ├── public/
 │   └── package.json
-├── backend/                # 後端服務
+├── backend/                                  # 後端服務
 │   ├── src/
 │   ├── config/
 │   └── package.json
-├── ai-services/            # AI分析服務
+├── ai-services/                              # AI分析服務
 │   ├── resume-parser/
 │   ├── job-matcher/
 │   └── requirements.txt
-├── scripts/                # 部署腳本
+├── scripts/                                  # 部署腳本
 └── README.md
 ```
 
@@ -203,15 +209,43 @@ GET /api/analysis/{jobId}
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 開啟一個 Pull Request
 
-## 📝 開發歷程
+## 📚 教學資源
 
-本專案從需求分析到技術規劃的完整歷程記錄在 [Development-Log.md](docs/Development-Log.md) 中，包括：
+### 🎓 SuperClaude教學體系
 
-- 用戶需求收集與分析
-- 技術選型決策過程  
-- 系統架構設計演進
-- 風險評估與應對策略
-- 實施計劃制定
+本項目特別提供完整的教學文檔系列，適合不同背景的學習者：
+
+#### 🧭 開始您的學習之旅
+📖 **[教學文檔導航手冊](docs/教學文檔導航手冊.md)**
+- 根據您的背景選擇最適合的學習路徑
+- 技術深度、實戰改善、基礎理解、商業價值四大路徑
+- 完整的學習資源和進階建議
+
+#### 📘 技術專業深度學習路徑
+📖 **[教學文檔-階段二架構重構](docs/教學文檔-階段二架構重構.md)**
+- **適合**: 軟體工程師、系統架構師、技術主管
+- **內容**: 微服務架構設計、性能優化實戰、安全加固方案
+- **時間**: 6-8小時深度學習 + 實踐項目
+
+#### 📗 產品改善實戰路徑  
+📖 **[AI求職助手改善教學指南](docs/AI求職助手改善教學指南.md)**
+- **適合**: 產品經理、項目經理、QA工程師、創業者
+- **內容**: 問題診斷框架、用戶體驗優化、數據驅動決策
+- **時間**: 4-6小時學習 + 改善項目實施
+
+#### 📙 非技術人員友好路徑
+📖 **[外行友好的AI開發流程說明](docs/外行友好的AI開發流程說明.md)**
+- **適合**: 老闆、投資人、行銷人員、一般用戶
+- **內容**: 用生活化比喻解釋AI系統、商業模式分析、投資價值評估
+- **時間**: 2-3小時輕鬆學習
+
+### 🔍 項目文檔
+本專案從需求分析到技術規劃的完整歷程記錄：
+
+- 📋 **[產品需求文檔](docs/PRD.md)**: 詳細的功能需求和用戶故事
+- 🏗️ **[系統架構文檔](docs/Architecture.md)**: 完整的技術架構設計
+- 📊 **[階段一系統評估](docs/Stage1-System-Assessment.md)**: 專業的系統分析報告
+- 🚀 **[開發歷程記錄](docs/Development-Log.md)**: 開發過程的詳細記錄
 
 ## 📄 授權
 

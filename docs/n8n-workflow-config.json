@@ -1,0 +1,283 @@
+{
+  "name": "ACA-Resume-Processing-Workflow",
+  "version": 1,
+  "meta": {
+    "description": "AI-Career-Assistant 履歷處理 Multi-Agent 工作流程",
+    "created_by": "ACA Development Team",
+    "tags": ["resume", "gemini", "multi-agent", "ai"]
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resume-processing",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Resume Input Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "aca-resume-processing"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json[\"input_type\"]}}",
+              "operation": "equal",
+              "value2": "audio"
+            }
+          ]
+        }
+      },
+      "id": "audio-check",
+      "name": "Check Input Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "model": "gemini-pro",
+        "prompt": "你是履歷音頻分析專家。請從以下語音轉錄內容中抽取履歷資訊：\n\n內容：{{$json[\"content\"]}}\n\n請以JSON格式輸出包含以下結構的資料：\n{\n  \"personal_info\": {\n    \"name\": \"姓名\",\n    \"contact\": \"聯絡資訊\",\n    \"location\": \"地點\"\n  },\n  \"work_experience\": [\n    {\n      \"company\": \"公司名稱\",\n      \"position\": \"職位\",\n      \"duration\": \"時間\",\n      \"responsibilities\": [\"職責1\", \"職責2\"]\n    }\n  ],\n  \"education\": [\n    {\n      \"school\": \"學校\",\n      \"degree\": \"學位\",\n      \"field\": \"專業\",\n      \"year\": \"畢業年\"\n    }\n  ],\n  \"skills\": {\n    \"technical\": [\"技術技能\"],\n    \"soft\": [\"軟技能\"],\n    \"languages\": [\"語言能力\"]\n  },\n  \"confidence_score\": 0.95\n}",
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 2000
+        }
+      },
+      "id": "gemini-audio-agent",
+      "name": "Audio Collection Agent",
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "model": "gemini-pro",
+        "prompt": "你是履歷文檔解析專家。請從以下文檔內容中抽取履歷資訊：\n\n內容：{{$json[\"content\"]}}\n\n請以JSON格式輸出結構化資料，包含 personal_info, work_experience, education, skills 等欄位。",
+        "options": {
+          "temperature": 0.2,
+          "maxTokens": 2000
+        }
+      },
+      "id": "gemini-document-agent",
+      "name": "Document Collection Agent",
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "model": "gemini-pro",
+        "prompt": "你是履歷內容分析專家。請深度分析以下履歷資料：\n\n{{$json[\"structured_data\"]}}\n\n請提供以下分析：\n1. 技能分類與評級（1-5分）\n2. 工作經歷完整性評估\n3. 市場競爭力分析\n4. 具體改善建議\n5. 職涯發展方向建議\n\n請以JSON格式輸出分析結果。",
+        "options": {
+          "temperature": 0.2,
+          "maxTokens": 1500
+        }
+      },
+      "id": "gemini-analysis-agent",
+      "name": "Content Analysis Agent",
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {},
+      "id": "split-workflow",
+      "name": "Split for Parallel Processing",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "model": "gemini-pro",
+        "prompt": "你是履歷格式化專家。請根據以下分析結果生成多種格式的履歷：\n\n原始資料：{{$json[\"resume_data\"]}}\n分析結果：{{$json[\"analysis_result\"]}}\n\n請生成以下三種版本：\n1. **ATS優化版本** - 適合求職網站掃描\n2. **標準專業版本** - 適合HR人員閱讀\n3. **創意版本** - 適合創意產業\n\n每個版本都要包含：\n- 完整的HTML格式\n- 重點摘要\n- 關鍵字優化建議\n\n以JSON格式輸出，包含 ats_version, standard_version, creative_version 三個欄位。",
+        "options": {
+          "temperature": 0.1,
+          "maxTokens": 2500
+        }
+      },
+      "id": "gemini-formatting-agent",
+      "name": "Formatting Agent",
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "model": "gemini-pro",
+        "prompt": "你是職涯發展顧問。基於以下履歷分析，請提供完整的職涯建議：\n\n履歷資料：{{$json[\"resume_data\"]}}\n分析結果：{{$json[\"analysis_result\"]}}\n\n請提供以下建議：\n1. **短期目標（6-12個月）**\n   - 立即可改善的技能\n   - 求職策略建議\n   - 網路建立方向\n\n2. **中期目標（1-3年）**\n   - 職涯路徑規劃\n   - 所需技能發展\n   - 產業趨勢分析\n\n3. **長期願景（3-5年）**\n   - 領導力發展\n   - 專業建立策略\n   - 薪資成長預期\n\n4. **實務建議**\n   - 推薦學習資源\n   - 認證考試建議\n   - 個人品牌建立\n\n以JSON格式輸出，包含 short_term, medium_term, long_term, practical_advice 四個主要欄位。",
+        "options": {
+          "temperature": 0.4,
+          "maxTokens": 2000
+        }
+      },
+      "id": "gemini-career-agent",
+      "name": "Career Advice Agent",
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {},
+      "id": "merge-results",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$json[\"callback_url\"]}}",
+        "sendQuery": false,
+        "sendHeaders": false,
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"workflow_id\": \"{{$json[\"workflow_id\"]}}\",\n  \"status\": \"success\",\n  \"results\": {\n    \"original_data\": {{$json[\"resume_data\"]}},\n    \"analysis_report\": {{$json[\"analysis_result\"]}},\n    \"formatted_resumes\": {{$json[\"formatted_resumes\"]}},\n    \"career_advice\": {{$json[\"career_advice\"]}}\n  },\n  \"processing_metadata\": {\n    \"execution_time\": \"{{$json[\"execution_time\"]}}\",\n    \"tokens_used\": {{$json[\"total_tokens\"]}},\n    \"confidence_scores\": {\n      \"data_extraction\": {{$json[\"extraction_confidence\"]}},\n      \"analysis_quality\": {{$json[\"analysis_confidence\"]}},\n      \"formatting_accuracy\": {{$json[\"formatting_confidence\"]}}\n    }\n  }\n}"
+      },
+      "id": "callback-webhook",
+      "name": "Send Results Callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$json[\"callback_url\"]}}",
+        "sendQuery": false,
+        "sendHeaders": false,
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"workflow_id\": \"{{$json[\"workflow_id\"]}}\",\n  \"status\": \"error\",\n  \"error_details\": \"{{$json[\"error_message\"]}}\",\n  \"failed_step\": \"{{$json[\"current_step\"]}}\",\n  \"retry_suggestions\": [\n    \"檢查輸入資料格式\",\n    \"確認 Gemini API 配額\",\n    \"重新提交處理請求\"\n  ]\n}"
+      },
+      "id": "error-callback",
+      "name": "Error Callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1780, 500]
+    }
+  ],
+  "connections": {
+    "Resume Input Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check Input Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Input Type": {
+      "main": [
+        [
+          {
+            "node": "Audio Collection Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Document Collection Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio Collection Agent": {
+      "main": [
+        [
+          {
+            "node": "Content Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Collection Agent": {
+      "main": [
+        [
+          {
+            "node": "Content Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Split for Parallel Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split for Parallel Processing": {
+      "main": [
+        [
+          {
+            "node": "Formatting Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Career Advice Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatting Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Career Advice Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Send Results Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "error-callback"
+  }
+}
